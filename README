@@ -1,0 +1,1 @@
+uses WebOb (WSGI wrapper), Jinja2 (templates), and Elixer (SQLAlchemy ORM wrapper)
