@@ -18,25 +18,18 @@
 #    along with this program.
 #    If not, see <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html>.
 
-from elixir import *
+'''
+For testing purposes, create 100 fake workers randomly assigned to each of
+the 8 lists we created in db_init
+'''
 
-metadata.bind = "sqlite:///pradpt1.sqlite"
+from models import *
+from random import randint, choice
 
-class Worker(Entity):
-    workerid = Field(Unicode(15), unique=True)
-    triallist = ManyToOne('TrialList')
-    #XXX: should I add 'session'?
+setup_all()
 
-    def __repr__(self):
-        return '<Worker: "%s"' % (self.workerid)
-
-class TrialList(Entity):
-    number = Field(Integer)
-    count = Field(Integer) # XXX: should i delete this in favor of counting associated workers?
-    workers = OneToMany('Worker')
-
-    def __repr__(self):
-        return '<TrialList: "%d">' % (self.number)
-
-    #def count(self):
-    #    return self.workers.count()
+for i in range(100):
+    tmp = ['A']
+    tmp.extend([choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890') for x in range(13)])
+    Worker(workerid = ''.join(tmp), triallist = TrialList.query.filter_by(number = randint(1,8)).one())
+session.commit()

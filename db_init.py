@@ -20,9 +20,8 @@
 
 from models import *
 
-# boilerplate Elixer code to create DB objects 
-setup_all()
-create_all()
+# boilerplate Elixer code to create DB objects
+setup_all(create_tables=True)
 
 # create our 8 lists with a starting count of 0
 for i in range(1,9):

@@ -2,22 +2,10 @@
 {% block title %}PRADPT1 - Part {{part}}{% endblock %}
 {% block head %}{{ super() }}
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
-    <script type="text/javascript">
-        swfobject.embedSWF("pradpt1.swf", "content", "900", "600", "9.0.0",
-                "expressInstall.swf", {'script':'{{scriptname}}'});
-        function register(field, answer) {
-            document.getElementById(field).value = answer;
-            return true;
-        }
-
-        jQuery(document).ready(function(){
-            var resultform = jQuery('#results');
-            var trialcount = 32; //this is kind of a stab in the dark. I don't know how many trials to expect.
-            for(var i=1;i<=trialcount;i++) {
-                resultform.append('<input type="hidden" name="trial' + i + '" id="trial' + i + '" value="NA" /> ');
-            }
-        });
-        </script>
+    <script tyle="text/javascipt">
+        swfobject.embedSWF("pradpt1.swf", "content", "900", "600", "9.0.0", "expressInstall.swf", {'script':'{{"list%s%s"|format(list,part)}}'});
+    </script>
+    <script type="text/javascript" src="flash_expt.js"></script>
 {% endblock %}
 {% block content %}Flash is required for this experiment{% endblock %}
 {% block form %}
@@ -25,6 +13,9 @@
     <!--<form  method="post" action="https://workersandbox.mturk.com/mturk/externalSubmit">-->
     <!--<form method="post" action="https://www.mturk.com/mturk/externalSubmit">-->
     <form id="results" method="post" action="/cgi-bin/postdetails.pl">
+        <input type="hidden" id="workerId" name="workerId" value="{{ amz_dict.workerId }}"/>
+        <input type="hidden" id="assignmentId" name="assignmentId" value="{{ amz_dict.assignmentId }}"/>
+        <input type="hidden" id="hitId" name="hitId" value="{{ amz_dict.hitId }}"/>
         <div id="comment">
             <p>Thanks!&nbsp;</p>
             <p>Feedback on this HIT (optional):</p>
