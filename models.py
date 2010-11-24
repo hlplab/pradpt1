@@ -19,12 +19,13 @@
 #    If not, see <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html>.
 
 from elixir import *
+from datetime import datetime
 
 metadata.bind = "sqlite:///pradpt1.sqlite"
 
 class Worker(Entity):
     workerid = Field(Unicode(15), unique=True)
-    triallist = ManyToOne('TrialList')
+    triallist = ManyToOne('TrialList', inverse = 'workers')
     #XXX: should I add 'session'?
 
     def __repr__(self):
@@ -32,11 +33,16 @@ class Worker(Entity):
 
 class TrialList(Entity):
     number = Field(Integer)
-    count = Field(Integer) # XXX: should i delete this in favor of counting associated workers?
-    workers = OneToMany('Worker')
+    count = Field(Integer) # TODO: delete this in favor of counting length of  list of associated workers
+    workers = OneToMany('Worker', inverse = 'triallist')
 
     def __repr__(self):
         return '<TrialList: "%d">' % (self.number)
 
-    #def count(self):
-    #    return self.workers.count()
+class Session(Entity):
+    number = Field(Integer)
+    timestamp = Field(DateTtime, default=datetime.now)
+    worker =  sadf
+
+    def __repr__(self):
+        return '<Session: %s, %d>' % (self.worker.workerid, self.number)

@@ -83,11 +83,10 @@ class ExperimentServer(object):
             template = env.get_template('preview.html')
             template = template.render()
         else:
-            required_keys.extend(('templ', 'part', 'list'))
+            required_keys.extend(('template', 'part'))
             try:
-                templ = req.params['templ']
+                templ = req.params['template']
                 part = req.params['part']
-                listid = req.params['list']
             except KeyError as e:
                 resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
 
@@ -96,14 +95,15 @@ class ExperimentServer(object):
             # on. warn them to finish part N-1 first if they've not done it
             # else, update what part they are on
             if not worker:
-                worker = Worker(workerid = amz_dict['workerId'], list = random_lowest_list())
+                worker = Worker(workerid = amz_dict['workerId'], triallist = random_lowest_list())
+                session.commit() # important! w/o this it won't save them
 
             if templ == 'instr':
                 template = env.get_template('instructions.html')
-                template = template.render(part=part)
+                template = template.render(part=part, triallist=worker.triallist.number)
             elif templ == 'expt':
                 template = env.get_template('flash_experiment.html')
-                template = template.render(part = part, list = listid, amz_dict = amz_dict)
+                template = template.render(part = part, list = worker.triallist.number, amz_dict = amz_dict)
 
         if template:
             resp = Response()
