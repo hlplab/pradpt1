@@ -25,11 +25,12 @@ the 8 lists we created in db_init
 
 from models import *
 from random import randint, choice
+from pradpt1 import random_lowest_list
 
 setup_all()
 
 for i in range(100):
     tmp = ['A']
     tmp.extend([choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890') for x in range(13)])
-    Worker(workerid = ''.join(tmp), triallist = TrialList.query.filter_by(number = randint(1,8)).one())
+    Worker(workerid = ''.join(tmp), trialgroup = random_lowest_list())
 session.commit()

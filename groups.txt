@@ -1,0 +1,10 @@
+session	1	2	3
+Group1	Session1_list1.txt	ALL-NPNP	Session3_list2.txt (immediately)
+Group2	Session1_list1.txt	ALL-NPPP	Session3_list2.txt(immediately)
+Group3	Session1_list2.txt	ALL-NPNP	Session3_list1.txt(immediately)
+Group4	Session1_list2.txt	ALL-NPPP	Session3_list1.txt(immediately)
+Group5	Session1_list1.txt	ALL-NPNP	Session3_list2.txt (2 days later)
+Group6	Session1_list1.txt	ALL-NPPP	Session3_list2.txt(2 days later)
+Group7	Session1_list2.txt	ALL-NPNP	Session3_list1.txt(2 days later)
+Group8	Session1_list2.txt	ALL-NPPP	Session3_list1.txt(2 days later)
+

@@ -2,6 +2,9 @@
 {% block title %}Experiment PRADPT1 - Preview{% endblock %}
 {% block content %}
 <h3>Experiment PRADPT1 - Preview</h3>
+{% if part >= 2 %}
+<p style="color:red;font-weight:bold;">This is part {{part}} of 3. Please be sure that you have done all previous parts before accepting this HIT.</p>
+{% endif %}
 <p>Your input will help us to understand how our brain processes and produces language.  In order to participate in this experiment, you need to be a native speaker of American English (i.e. you must have moved to the U.S. before the age of 6 and you must have lived there most of your life).</p>
 
 <p>Payment is progressive, so that this task is really worth it if you complete all parts.</p>

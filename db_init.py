@@ -24,6 +24,25 @@ from models import *
 setup_all(create_tables=True)
 
 # create our 8 lists with a starting count of 0
+# see groups.txt for why the groups are this way
 for i in range(1,9):
-    TrialList(number=i,count=0)
+    tg = TrialGroup(number=i)
+
+    if i in (1,2,5,6):
+        tg.sess1list = 1
+        tg.sess3list = 2
+    else:
+        tg.sess1list = 2
+        tg.sess3list = 1
+
+    if i in (1,3,5,7):
+        tg.sess2list = u'NPNP'
+    else:
+        tg.sess2list = u'NPPP'
+
+    if i <= 4:
+        tg.now = True
+    else:
+        tg.now = False
+
 session.commit()

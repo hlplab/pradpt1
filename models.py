@@ -25,24 +25,30 @@ metadata.bind = "sqlite:///pradpt1.sqlite"
 
 class Worker(Entity):
     workerid = Field(Unicode(15), unique=True)
-    triallist = ManyToOne('TrialList', inverse = 'workers')
-    #XXX: should I add 'session'?
+    trialgroup = ManyToOne('TrialGroup', inverse = 'workers')
+    sessionstate = OneToOne('SessionState', inverse='worker')
 
     def __repr__(self):
         return '<Worker: "%s"' % (self.workerid)
 
-class TrialList(Entity):
+class TrialGroup(Entity):
     number = Field(Integer)
-    count = Field(Integer) # TODO: delete this in favor of counting length of  list of associated workers
-    workers = OneToMany('Worker', inverse = 'triallist')
+    sess1list = Field(Integer)
+    sess2list = Field(Enum(u'NPNP', u'NPPP'))
+    sess3list = Field(Integer)
+    now = Field(Boolean)
+    workers = OneToMany('Worker', inverse = 'trialgroup')
 
     def __repr__(self):
         return '<TrialList: "%d">' % (self.number)
 
-class Session(Entity):
+    def worker_count(self):
+        return len(self.workers)
+
+class SessionState(Entity):
     number = Field(Integer)
-    timestamp = Field(DateTtime, default=datetime.now)
-    worker =  sadf
+    timestamp = Field(DateTime, default=datetime.now)
+    worker =  ManyToOne('Worker', inverse='sessionstate')
 
     def __repr__(self):
         return '<Session: %s, %d>' % (self.worker.workerid, self.number)

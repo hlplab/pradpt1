@@ -20,7 +20,7 @@
 
 from webob import Request, Response, exc
 from jinja2 import Environment, FileSystemLoader
-from models import Worker, TrialList
+from models import Worker, TrialGroup, SessionState
 from sqlalchemy.orm.exc import NoResultFound
 from elixir import *
 from random import choice
@@ -37,7 +37,7 @@ def check_worker_exists(workerid):
         return None
 
 def random_lowest_list():
-    all_lists = TrialList.query.all()
+    all_lists = TrialGroup.query.all()
     # sort the lists from least assigned workers to most
     all_lists.sort(key = lambda x: len(x.workers))
 
@@ -61,49 +61,57 @@ class ExperimentServer(object):
         env = Environment(loader=FileSystemLoader('.'))
         amz_dict = {'workerId' : '', 'assignmentId' : '', 'hitId' : ''}
         templ, part, listid, template, resp = [None for x in range(5)]
-        required_keys = ['workerId', 'assignmentId', 'hitId']
+        required_keys = ['workerId', 'assignmentId', 'hitId', 'part']
         key_error_msg = 'Missing parameter: {0}. Required keys: {1}'
 
         try:
             amz_dict['workerId'] = req.params['workerId']
             amz_dict['assignmentId'] = req.params['assignmentId']
             amz_dict['hitId'] = req.params['hitId']
+            part = int(req.params['part'])
         except KeyError as e:
             resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
 
-        worker = check_worker_exists(amz_dict['workerId'])
-        if worker:
-            pass
-        # TODO: check to see if we have the worker in the db yet. if so, check
-        # if they're previewing part N, but haven't done part N-1
-        # at this point we just want to warn. don't assign to any list until
-        # they accept the HIT.
-
         if amz_dict['assignmentId'] == 'ASSIGNMENT_ID_NOT_AVAILABLE':
             template = env.get_template('preview.html')
-            template = template.render()
+            template = template.render(part = part)
         else:
-            required_keys.extend(('template', 'part'))
+            required_keys.extend('template')
             try:
                 templ = req.params['template']
-                part = req.params['part']
             except KeyError as e:
                 resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
 
-            # TODO: if worker isn't set, create them and assign to list here
-            # if worker is set, retrieve their list and check what part they are
-            # on. warn them to finish part N-1 first if they've not done it
-            # else, update what part they are on
-            if not worker:
-                worker = Worker(workerid = amz_dict['workerId'], triallist = random_lowest_list())
-                session.commit() # important! w/o this it won't save them
+            worker = check_worker_exists(amz_dict['workerId'])
+            if worker:
+                try:
+                    sess = SessionState.query.filter_by(worker=worker).one()
+                    sess.number = part
+                    session.commit() # important! w/o this it won't save them
+                except NoResultFound:
+                    pass
+            else:
+                if part == 1:
+                    worker = Worker(workerid = amz_dict['workerId'], trialgroup = random_lowest_list())
+                    SessionState(number = 1, worker = worker)
+                    session.commit() # important! w/o this it won't save them
+                else:
+                    # If part is anything but 1 and there's no worker defined,
+                    # then something is horribly wrong
+                    resp = exc.HTTPBadRequest('Attempting to do a part after 1 without having done 1!')
 
             if templ == 'instr':
                 template = env.get_template('instructions.html')
-                template = template.render(part=part, triallist=worker.triallist.number)
+                template = template.render(part=part, now=worker.trialgroup.now)
             elif templ == 'expt':
-                template = env.get_template('flash_experiment.html')
-                template = template.render(part = part, list = worker.triallist.number, amz_dict = amz_dict)
+                sesslist = {1 : worker.trialgroup.sess1list,
+                            2 : worker.trialgroup.sess2list,
+                            3 : worker.trialgroup.sess3list}[part]
+                if part in (1,3):
+                    template = env.get_template('flash_experiment.html')
+                else:
+                    template = env.get_template('spr_experiment.html')
+                template = template.render(part = part, list = sesslist, amz_dict = amz_dict)
 
         if template:
             resp = Response()
