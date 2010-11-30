@@ -24,7 +24,7 @@ from models import Worker, TrialGroup, SessionState
 from sqlalchemy.orm.exc import NoResultFound
 from elixir import *
 from random import choice
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # elixir code to connect to db and connect models to db objects
 metadata.bind = "sqlite:///pradpt1.sqlite"
@@ -88,9 +88,17 @@ class ExperimentServer(object):
                 if part > 1:
                     try:
                         sess = SessionState.query.filter_by(worker=worker).one()
-                        sess.number = part
-                        sess.timestamp = datetime.now() #TODO: check timestamp on part 3
-                        session.commit() # important! w/o this it won't save them
+                        if part == 3:
+                            if sess.number != 2:
+                                resp = exc.HTTPBadRequest('You must do part 2 before part 3!')
+                            if not worker.trialgroup.now:
+                                start_time = sess.timestamp + timedelta(days=2)
+                                if datetime.now() < start_time:
+                                    resp = exc.HTTPBadRequest('You must wait at least 2 days before doing part 3!')
+                        if not resp:
+                            sess.number = part
+                            sess.timestamp = datetime.now()
+                            session.commit() # important! w/o this it won't save them
                     except NoResultFound:
                         resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
             else:

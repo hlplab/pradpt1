@@ -40,7 +40,7 @@ class TrialGroup(Entity):
     workers = OneToMany('Worker', inverse = 'trialgroup')
 
     def __repr__(self):
-        return '<TrialList: "%d">' % (self.number)
+        return '<TrialGroup: "%d">' % (self.number)
 
     def worker_count(self):
         return len(self.workers)
@@ -51,4 +51,4 @@ class SessionState(Entity):
     worker =  ManyToOne('Worker', inverse='sessionstate')
 
     def __repr__(self):
-        return '<Session: %s, %d>' % (self.worker.workerid, self.number)
+        return '<SessionState: %s, %d>' % (self.worker.workerid, self.number)
