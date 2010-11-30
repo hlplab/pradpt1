@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}PRADPT1 - Part {{part}}{% endblock %}
+{% block head %}{{ super() }}
+<!-- Add some custom JS for this page here-->
+{% endblock %}
+
+{% block content %}
+<p>For this part of the experiment, you will be doing a task on an external site in a new tab or window. You will need to enter your Mechanical Turk WorkerID into a form at the beginning of the external task. Your WorkerID is provided below for you to copy and paste.</p>
+
+<p><span style="font-weight: bold;">Your WorkerID:</span> <input readonly="readonly" style="width: 32em;" value="{{amz_dict.workerId}}"></input></p>
+
+<p><a target="_blank" href="http://spellout.net/ibexexps/hlplab/pradapt1_{{list}}/experiment.html">Go to the external site</a></p>
+
+<p>After completing the external task you need to copy and paste the code provided at the end of the task into the form below.</p>
+{% endblock %}
+
+{% block form %}
+<div id="userform">
+    <!--<form  method="post" action="https://workersandbox.mturk.com/mturk/externalSubmit">-->
+    <!--<form method="post" action="https://www.mturk.com/mturk/externalSubmit">-->
+    <form id="results" method="post" action="/cgi-bin/postdetails.pl">
+        <p><span style="font-weight:bold;">Code:</span> <input type="text" style="width: 32em;" id="code" name="code"/></p>
+        <input type="hidden" id="workerId" name="workerId" value="{{ amz_dict.workerId }}"/>
+        <input type="hidden" id="assignmentId" name="assignmentId" value="{{ amz_dict.assignmentId }}"/>
+        <input type="hidden" id="hitId" name="hitId" value="{{ amz_dict.hitId }}"/>
+        <div id="comment">
+            <p>Thanks!&nbsp;</p>
+            <p>Feedback on this HIT (optional):</p>
+            <p><textarea id="commentarea" name="comment" cols="80" rows="3"></textarea></p>
+        </div>
+        <button type="submit" name="submit" id="submit">Submit</button>
+    </form>
+</div>
+{% endblock %}
