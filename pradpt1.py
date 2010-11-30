@@ -24,6 +24,7 @@ from models import Worker, TrialGroup, SessionState
 from sqlalchemy.orm.exc import NoResultFound
 from elixir import *
 from random import choice
+from datetime import datetime
 
 # elixir code to connect to db and connect models to db objects
 metadata.bind = "sqlite:///pradpt1.sqlite"
@@ -84,36 +85,41 @@ class ExperimentServer(object):
 
             worker = check_worker_exists(amz_dict['workerId'])
             if worker:
-                try:
-                    sess = SessionState.query.filter_by(worker=worker).one()
-                    sess.number = part
-                    session.commit() # important! w/o this it won't save them
-                except NoResultFound:
-                    pass
+                if part > 1:
+                    try:
+                        sess = SessionState.query.filter_by(worker=worker).one()
+                        sess.number = part
+                        sess.timestamp = datetime.now() #TODO: check timestamp on part 3
+                        session.commit() # important! w/o this it won't save them
+                    except NoResultFound:
+                        resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
             else:
+                print "No worker defined"
                 if part == 1:
                     worker = Worker(workerid = amz_dict['workerId'], trialgroup = random_lowest_list())
                     SessionState(number = 1, worker = worker)
                     session.commit() # important! w/o this it won't save them
                 else:
+                    print "This is bad"
                     # If part is anything but 1 and there's no worker defined,
                     # then something is horribly wrong
-                    resp = exc.HTTPBadRequest('Attempting to do a part after 1 without having done 1!')
+                    resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
 
-            if templ == 'instr':
-                template = env.get_template('instructions.html')
-                template = template.render(part=part, now=worker.trialgroup.now)
-            elif templ == 'expt':
-                sesslist = {1 : worker.trialgroup.sess1list,
-                            2 : worker.trialgroup.sess2list,
-                            3 : worker.trialgroup.sess3list}[part]
-                if part in (1,3):
-                    template = env.get_template('flash_experiment.html')
-                else:
-                    template = env.get_template('spr_experiment.html')
-                template = template.render(part = part, list = sesslist, amz_dict = amz_dict)
+            if not resp:
+                if templ == 'instr':
+                    template = env.get_template('instructions.html')
+                    template = template.render(part=part, now=worker.trialgroup.now)
+                elif templ == 'expt':
+                    sesslist = {1 : worker.trialgroup.sess1list,
+                                2 : worker.trialgroup.sess2list,
+                                3 : worker.trialgroup.sess3list}[part]
+                    if part in (1,3):
+                        template = env.get_template('flash_experiment.html')
+                    else:
+                        template = env.get_template('spr_experiment.html')
+                    template = template.render(part = part, list = sesslist, amz_dict = amz_dict)
 
-        if template:
+        if template and not resp:
             resp = Response()
             resp.content_type='application/xhtml+xml'
             resp.unicode_body = template
