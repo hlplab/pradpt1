@@ -94,13 +94,11 @@ class ExperimentServer(object):
                     except NoResultFound:
                         resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
             else:
-                print "No worker defined"
                 if part == 1:
                     worker = Worker(workerid = amz_dict['workerId'], trialgroup = random_lowest_list())
                     SessionState(number = 1, worker = worker)
                     session.commit() # important! w/o this it won't save them
                 else:
-                    print "This is bad"
                     # If part is anything but 1 and there's no worker defined,
                     # then something is horribly wrong
                     resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
