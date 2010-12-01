@@ -10,6 +10,7 @@
     </head>
 
     <body>
+        {% block instructions %}{% endblock %}
         <div id="content">{% block content %}{% endblock %}</div>
         {% block form %}{% endblock %}
     </body>

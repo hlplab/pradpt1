@@ -7,6 +7,12 @@
     </script>
     <script type="text/javascript" src="http://www.hlp.rochester.edu/mturk/WOACQ.1/flash_expt.js"></script>
 {% endblock %}
+
+{% block instructions %}
+<div id="instructions">
+    {% include "partXXX_instructions.html"|replace('XXX', part) %}
+</div>
+{% endblock %}
 {% block content %}Flash is required for this experiment{% endblock %}
 {% block form %}
 <div id="userform">

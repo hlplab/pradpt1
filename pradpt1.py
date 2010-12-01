@@ -72,17 +72,12 @@ class ExperimentServer(object):
             part = int(req.params['part'])
         except KeyError as e:
             resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
+            return resp(environ, start_response)
 
         if amz_dict['assignmentId'] == 'ASSIGNMENT_ID_NOT_AVAILABLE':
             template = env.get_template('preview.html')
             template = template.render(part = part)
         else:
-            required_keys.extend('template')
-            try:
-                templ = req.params['template']
-            except KeyError as e:
-                resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
-
             worker = check_worker_exists(amz_dict['workerId'])
             if worker:
                 if part > 1:
@@ -112,18 +107,14 @@ class ExperimentServer(object):
                     resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
 
             if not resp:
-                if templ == 'instr':
-                    template = env.get_template('instructions.html')
-                    template = template.render(part=part, now=worker.trialgroup.now)
-                elif templ == 'expt':
-                    sesslist = {1 : worker.trialgroup.sess1list,
-                                2 : worker.trialgroup.sess2list,
-                                3 : worker.trialgroup.sess3list}[part]
-                    if part in (1,3):
-                        template = env.get_template('flash_experiment.html')
-                    else:
-                        template = env.get_template('spr_experiment.html')
-                    template = template.render(part = part, list = sesslist, amz_dict = amz_dict)
+                sesslist = {1 : worker.trialgroup.sess1list,
+                            2 : worker.trialgroup.sess2list,
+                            3 : worker.trialgroup.sess3list}[part]
+                if part in (1,3):
+                    template = env.get_template('flash_experiment.html')
+                else:
+                    template = env.get_template('spr_experiment.html')
+                template = template.render(part = part, list = sesslist, now=worker.trialgroup.now, amz_dict = amz_dict)
 
         if template and not resp:
             resp = Response()
