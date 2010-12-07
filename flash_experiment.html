@@ -3,7 +3,7 @@
 {% block head %}{{ super() }}
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
     <script tyle="text/javascipt">
-        swfobject.embedSWF("http://www.hlp.rochester.edu/mturk/WOACQ.1/webag_7.swf", "content", "900", "600", "9.0.0", "expressInstall.swf", {'script':'{{"Session%s_list%s"|format(list,part)}}'});
+        swfobject.embedSWF("http://www.hlp.rochester.edu/mturk/WOACQ.1/webag_7.swf", "content", "900", "600", "9.0.0", "expressInstall.swf", {'script':'{{"Session%s_list%s"|format(list,part)}}'}, {'allowScriptAccess':'always'});
     </script>
     <script type="text/javascript" src="http://www.hlp.rochester.edu/mturk/WOACQ.1/flash_expt.js"></script>
 {% endblock %}
