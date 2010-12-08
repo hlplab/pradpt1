@@ -29,7 +29,7 @@ class Worker(Entity):
     sessionstate = OneToOne('SessionState', inverse='worker')
 
     def __repr__(self):
-        return '<Worker: "%s"' % (self.workerid)
+        return '<Worker: "%s">' % (self.workerid)
 
 class TrialGroup(Entity):
     number = Field(Integer)
@@ -46,9 +46,13 @@ class TrialGroup(Entity):
         return len(self.workers)
 
 class SessionState(Entity):
-    number = Field(Integer)
-    timestamp = Field(DateTime, default=datetime.now)
+    sess1complete = Field(Boolean, default = False)
+    sess2complete = Field(Boolean, default = False)
+    sess3complete = Field(Boolean, default = False)
+    sess1timestamp = Field(DateTime, default=datetime.min)
+    sess2timestamp = Field(DateTime, default=datetime.min)
+    sess3timestamp = Field(DateTime, default=datetime.min)
     worker =  ManyToOne('Worker', inverse='sessionstate')
 
     def __repr__(self):
-        return '<SessionState: %s, %d>' % (self.worker.workerid, self.number)
+        return '<SessionState: {0}, {1}, {2}, {3}>'.format(self.worker.workerid, self.sess1complete, self.sess2complete, self.sess3complete)

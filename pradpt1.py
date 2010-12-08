@@ -53,7 +53,7 @@ def random_lowest_list():
 
 class ExperimentServer(object):
 
-    def __init__(self, app):
+    def __init__(self, app=None): # this way if running standalone, gets app, else doesn't need it
         self.app = app
 
     def __call__(self, environ, start_response):
@@ -80,26 +80,34 @@ class ExperimentServer(object):
         else:
             worker = check_worker_exists(amz_dict['workerId'])
             if worker:
-                if part > 1:
+                if part in (2,3):
                     try:
                         sess = SessionState.query.filter_by(worker=worker).one()
+                        if part == 2:
+                            if not sess.sess1complete:
+                                resp = exc.HTTPBadRequest('You must do part 1 before part 2!')
+                            else:
+                                sess.sess2complete = True
+                                sess.sess2timestamp = datetime.now()
+                                session.commit() # important! w/o this it won't save them
+
                         if part == 3:
-                            if sess.number != 2:
+                            if not sess.sess2complete:
                                 resp = exc.HTTPBadRequest('You must do part 2 before part 3!')
                             if not worker.trialgroup.now:
-                                start_time = sess.timestamp + timedelta(days=2)
+                                start_time = sess.sess2timestamp + timedelta(days=2)
                                 if datetime.now() < start_time:
                                     resp = exc.HTTPBadRequest('You must wait at least 2 days before doing part 3!')
-                        if not resp:
-                            sess.number = part
-                            sess.timestamp = datetime.now()
-                            session.commit() # important! w/o this it won't save them
+                            if not resp:
+                                sess.sess3complete = True
+                                sess.sess4timestamp = datetime.now()
+                                session.commit() # important! w/o this it won't save them
                     except NoResultFound:
                         resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
             else:
                 if part == 1:
                     worker = Worker(workerid = amz_dict['workerId'], trialgroup = random_lowest_list())
-                    SessionState(number = 1, worker = worker)
+                    SessionState(sess1complete = True, worker = worker)
                     session.commit() # important! w/o this it won't save them
                 else:
                     # If part is anything but 1 and there's no worker defined,
