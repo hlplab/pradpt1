@@ -18,7 +18,8 @@
 #    If not, see <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html>.
 #
 
-from webob import Request, Response, exc
+from webob import Request, Response
+from webob.exc import HTTPForbidden, HTTPBadRequest
 from jinja2 import Environment, FileSystemLoader
 from models import Worker, TrialGroup, SessionState
 from sqlalchemy.orm.exc import NoResultFound
@@ -71,7 +72,7 @@ class ExperimentServer(object):
             amz_dict['hitId'] = req.params['hitId']
             part = int(req.params['part'])
         except KeyError as e:
-            resp = exc.HTTPBadRequest(key_error_msg.format(e, required_keys))
+            resp = HTTPBadRequest(key_error_msg.format(e, required_keys))
             return resp(environ, start_response)
 
         if amz_dict['assignmentId'] == 'ASSIGNMENT_ID_NOT_AVAILABLE':
@@ -80,12 +81,13 @@ class ExperimentServer(object):
         else:
             worker = check_worker_exists(amz_dict['workerId'])
             if worker:
+                forbidden_msg = '<p style="font-weight: bold; font-size: x-large;">{0}</p>'
                 if part in (2,3):
                     try:
                         sess = SessionState.query.filter_by(worker=worker).one()
                         if part == 2:
                             if not sess.sess1complete:
-                                resp = exc.HTTPBadRequest('You must do part 1 before part 2!')
+                                resp = HTTPForbidden(forbidden_msg.format('You must do part 1 before part 2!'))
                             else:
                                 sess.sess2complete = True
                                 sess.sess2timestamp = datetime.now()
@@ -93,17 +95,17 @@ class ExperimentServer(object):
 
                         if part == 3:
                             if not sess.sess2complete:
-                                resp = exc.HTTPBadRequest('You must do part 2 before part 3!')
+                                resp = HTTPForbidden(body_template=forbidden_msg.format('You must do part 2 before part 3!'))
                             if not worker.trialgroup.now:
                                 start_time = sess.sess2timestamp + timedelta(days=2)
                                 if datetime.now() < start_time:
-                                    resp = exc.HTTPBadRequest('You must wait at least 2 days before doing part 3!')
+                                    resp = HTTPForbidden(forbidden_msg('You must wait at least 2 days before doing part 3!'))
                             if not resp:
                                 sess.sess3complete = True
                                 sess.sess4timestamp = datetime.now()
                                 session.commit() # important! w/o this it won't save them
                     except NoResultFound:
-                        resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
+                        resp = HTTPForbidden(forbidden_msg.format('Attempting to do part {0} without having done part 1!'.format(part)))
             else:
                 if part == 1:
                     worker = Worker(workerid = amz_dict['workerId'], trialgroup = random_lowest_list())
@@ -112,7 +114,7 @@ class ExperimentServer(object):
                 else:
                     # If part is anything but 1 and there's no worker defined,
                     # then something is horribly wrong
-                    resp = exc.HTTPBadRequest('Attempting to do part {0} without having done part 1!'.format(part))
+                    resp = HTTPForbidden(forbidden_msg.format('Attempting to do part {0} without having done part 1!'.format(part)))
 
             if not resp:
                 sesslist = {1 : worker.trialgroup.sess1list,
